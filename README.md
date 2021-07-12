@@ -42,6 +42,18 @@ pip install git+https://github.com/lessw2020/Ranger-Deep-Learning-Optimizer@mast
 Note that Python<=3.6 is required for `gdcm`. If you have prepared the dataset, you don't need gdcm anymore. Also using PyTorch >= 1.6 includes automatic mixed precision within PyTorch, so Apex is no longer needed.
 It works without Apex on PyTorch=1.6 and PyTorch-Lightning=0.8.5.
 
+Modified
+```
+conda create -n dvao python=3.6
+conda activate dvao
+conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+conda install -c conda-forge gdcm pydicom
+pip install pytorch_lightning dicom_numpy scikit-image pillow pytorch-msssim
+pip install git+https://github.com/aliutkus/torchinterp1d@master#egg=torchinterp1d
+pip install git+https://github.com/aliutkus/torchsearchsorted@master#egg=torchsearchsorted
+pip install git+https://github.com/lessw2020/Ranger-Deep-Learning-Optimizer@master#egg=ranger
+```
+
 ### Compile CUDA script
 If you want to use our scripts to generate the training data (or use the ground truth ray caster in any way), you need to compile the CUDA script yourself:
 ```bash

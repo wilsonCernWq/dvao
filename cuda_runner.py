@@ -16,7 +16,7 @@ import torch
 import torch.nn.functional as F
 
 def get_cuda_raycast_volume():
-    dll = ctypes.CDLL('/home/dome/Repositories/deep-volume-rendering/raycast_volume.so', mode=ctypes.RTLD_GLOBAL)
+    dll = ctypes.CDLL('/home/qadwu/Work/dvao/raycast_volume.so', mode=ctypes.RTLD_GLOBAL)
     raycastVolume = dll.raycastVolume
     raycastVolume.argtypes = [POINTER(c_float), POINTER(c_float), POINTER(c_int32), POINTER(c_float),
     POINTER(c_float), c_float, c_size_t, c_float, POINTER(c_float)]
@@ -102,8 +102,8 @@ if __name__ == "__main__":
     parser.add_argument('--random_tf', action='store_true', help='Whether to generate a random TF every time')
     parser.add_argument('--tf_path', type=str, default='transfer_functions/qure_bone_new.itf', help='Path to the .itf transfer function')
     parser.add_argument('--tf_res', type=int, default=4096, help='Transfer function resolution')
-    parser.add_argument('--vol_path', type=str, default='/run/media/dome/Data/data/QureAI_Brain_CT', help='Path to the QureAI CQ500 dataset')
-    parser.add_argument('--out_path', type=str, default='/run/media/dome/Data/data/Volumes/Qure_RandomTF', help='Path where the resulting AO shall be saved')
+    parser.add_argument('--vol_path', type=str, default='/media/storage1/volume/CQ500', help='Path to the QureAI CQ500 dataset')
+    parser.add_argument('--out_path', type=str, default='/media/data/qadwu/dvao/Qure_RandomTF', help='Path where the resulting AO shall be saved')
     parser.add_argument('--pt', action='store_true', help='Whether the vol_path contains NumPy volumes in PyTorch pickled dicts (*.pt)')
     parser.add_argument('--skip_existing', action='store_true', help='Skips Volumes for which the target file already exists')
     args = parser.parse_args()
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             map(   lambda p: list(p.iterdir()),                 # get list of actual volume directorie
             map(   lambda p: next(p.iterdir())/'Unknown Study', # cd into subfolders CQ500-CT-XX/Unknown Study/
             filter(lambda p: p.is_dir(),                        # Get all dirs, no files
-            path.iterdir())))))                                  # Iterate over path directory
+            path.iterdir())))))                                 # Iterate over path directory
         )
 
         volume_gen = get_volume_gen(volume_dirs, False, tf_pts=tf_pts)

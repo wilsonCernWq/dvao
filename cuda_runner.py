@@ -16,22 +16,32 @@ import torch
 import torch.nn.functional as F
 
 def get_cuda_raycast_volume():
-    dll = ctypes.CDLL('/home/qadwu/Work/dvao/raycast_volume.so', mode=ctypes.RTLD_GLOBAL)
+    # need to differentiate windows and linu-like OSes
+    dll = ctypes.CDLL('C:\\Users\\wilson\\Work\\project\\dvao\\raycast_volume.dll', mode=ctypes.RTLD_GLOBAL)
     raycastVolume = dll.raycastVolume
-    raycastVolume.argtypes = [POINTER(c_float), POINTER(c_float), POINTER(c_int32), POINTER(c_float),
-    POINTER(c_float), c_float, c_size_t, c_float, POINTER(c_float)]
-
+    raycastVolume.argtypes = [
+        POINTER(c_float), 
+        POINTER(c_float), 
+        POINTER(c_int32), 
+        POINTER(c_float),
+        POINTER(c_float), 
+        c_float, 
+        c_size_t, 
+        c_float, 
+        POINTER(c_float)
+    ]
+    dll.shoutout()
     return raycastVolume
 
 _cuda_raycast_volume = get_cuda_raycast_volume()
 
 def raycast_volume(vol, tf_tex, tex_dims, vox_scl, ray, n_steps_factor, n_rays, min_value, vol_out):
-    vol_p     = vol.ctypes.data_as(      POINTER(c_float))
-    tf_tex_p  = tf_tex.ctypes.data_as(   POINTER(c_float))
-    tex_dims_p= tex_dims.ctypes.data_as( POINTER(c_int32))
-    vox_scl_p = vox_scl.ctypes.data_as(  POINTER(c_float))
-    ray_p     = ray.ctypes.data_as(      POINTER(c_float))
-    vol_out_p = vol_out.ctypes.data_as(  POINTER(c_float))
+    vol_p      = vol.ctypes.data_as(      POINTER(c_float))
+    tf_tex_p   = tf_tex.ctypes.data_as(   POINTER(c_float))
+    tex_dims_p = tex_dims.ctypes.data_as( POINTER(c_int32))
+    vox_scl_p  = vox_scl.ctypes.data_as(  POINTER(c_float))
+    ray_p      = ray.ctypes.data_as(      POINTER(c_float))
+    vol_out_p  = vol_out.ctypes.data_as(  POINTER(c_float))
     _cuda_raycast_volume(vol_p, tf_tex_p, tex_dims_p, vox_scl_p, ray_p, n_steps_factor, n_rays, min_value, vol_out_p)
 
 def generate_random_rays(n_rays):
@@ -52,10 +62,10 @@ def generate_uniform_rays(samples=256,randomize=False):
 
     points = []
     offset = 2./samples
-    increment = math.pi * (3. - math.sqrt(5.));
+    increment = math.pi * (3. - math.sqrt(5.))
 
     for i in range(samples):
-        y = ((i * offset) - 1) + (offset / 2);
+        y = ((i * offset) - 1) + (offset / 2)
         r = math.sqrt(1 - pow(y,2))
 
         phi = ((i + rnd) % samples) * increment
@@ -99,11 +109,11 @@ if __name__ == "__main__":
     parser.add_argument('--uniform', action='store_true', help='Use uniformly distributed rays using Spherical Fibonacci')
     parser.add_argument('--debug', action='store_true', help='Saves all 4 channels of the volume for debugging')
     parser.add_argument('--only1', action='store_true', help='Process only the first DICOM folder')
-    parser.add_argument('--random_tf', action='store_true', help='Whether to generate a random TF every time')
+    parser.add_argument('--random_tf', action='store_false', help='Whether to generate a random TF every time')
     parser.add_argument('--tf_path', type=str, default='transfer_functions/qure_bone_new.itf', help='Path to the .itf transfer function')
     parser.add_argument('--tf_res', type=int, default=4096, help='Transfer function resolution')
-    parser.add_argument('--vol_path', type=str, default='/media/storage1/volume/CQ500', help='Path to the QureAI CQ500 dataset')
-    parser.add_argument('--out_path', type=str, default='/media/data/qadwu/dvao/Qure_RandomTF', help='Path where the resulting AO shall be saved')
+    parser.add_argument('--vol_path', type=str, default='D:\\Datasets\\CQ500', help='Path to the QureAI CQ500 dataset')
+    parser.add_argument('--out_path', type=str, default='D:\\Datasets\\CQ500RandomTF', help='Path where the resulting AO shall be saved')
     parser.add_argument('--pt', action='store_true', help='Whether the vol_path contains NumPy volumes in PyTorch pickled dicts (*.pt)')
     parser.add_argument('--skip_existing', action='store_true', help='Skips Volumes for which the target file already exists')
     args = parser.parse_args()
@@ -130,15 +140,7 @@ if __name__ == "__main__":
                 yield vol, tf_pts, vox_scl, name
         volume_gen = _gen()
     else: # Load DICOM folders using CQ500 directory structure
-        volume_dirs = list(
-            filter(lambda p: p is not None,
-            map(   get_largest_dir,                             # extract subdir with most files in it (highest res volume)
-            map(   lambda p: list(p.iterdir()),                 # get list of actual volume directorie
-            map(   lambda p: next(p.iterdir())/'Unknown Study', # cd into subfolders CQ500-CT-XX/Unknown Study/
-            filter(lambda p: p.is_dir(),                        # Get all dirs, no files
-            path.iterdir())))))                                 # Iterate over path directory
-        )
-
+        volume_dirs = get_volume_dirs(path)
         volume_gen = get_volume_gen(volume_dirs, False, tf_pts=tf_pts)
 
     for vol, tf_pts, voxel_scale, vol_name in volume_gen:

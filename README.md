@@ -60,6 +60,17 @@ If you want to use our scripts to generate the training data (or use the ground 
 nvcc -Xcompiler -fPIC -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored -shared -o raycast_volume.so raycast_volume.cu
 ```
 
+Updated:
+
+Linux:
+```bash
+nvcc -I./glm -Xcompiler -fPIC -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored -shared -o raycast_volume.so raycast_volume.cu
+```
+Windows
+```bash
+nvcc -I.\glm -shared -o raycast_volume.dll raycast_volume.cu
+```
+
 ## Usage
 ### Inference using pretrained model
 First [download our weights](https://docs.google.com/uc?export=download&id=1MJ8AqKqR5Z9U3gsLpR_rJUAxfUevTVlI), then use our inference script:

@@ -27,12 +27,11 @@ def get_volume_dirs(path):
     path = Path(path)
     return list(
         filter(lambda p: p is not None,
-        map(   get_largest_dir,                             # extract subdir with most files in it (highest res volume)
-        map(   lambda p: list(p.iterdir()),                 # get list of actual volume directorie
-        map(   lambda p: next(p.iterdir())/'Unknown Study', # cd into subfolders CQ500-CT-XX/Unknown Study/
-        filter(lambda p: p.is_dir(),                        # Get all dirs, no files
-        path.iterdir())))))                                 # Iterate over path directory
-)
+        map(   get_largest_dir,             # extract subdir with most files in it (highest res volume)
+        map(   lambda p: list(p.iterdir()), # get list of actual volume directorie
+        map(   lambda p: next(p.iterdir()), # cd into subfolders CQ500-CT-XX/Unknown Study/
+        filter(lambda p: p.is_dir(),        # Get all dirs, no files
+        path.iterdir()))))))                # Iterate over path directory
 
 def get_volume_gen(volume_dirs, rescale=None, tf_pts=None):
     ''' Make a generator that loads volumes from a list of volume directories, `volume_dirs`.

@@ -7,7 +7,7 @@ from torch.nn import Linear, Conv1d, BatchNorm1d, Conv3d, InstanceNorm3d, Adapti
 from torch.utils.data import Dataset, DataLoader
 # Third party torch stuff
 import pytorch_lightning as pl
-from pytorch_lightning.logging import CometLogger
+from pytorch_lightning.loggers import CometLogger
 from pytorch_msssim import ssim as pt_ssim
 
 import numpy as np
@@ -309,9 +309,10 @@ def get_injection_from_projname(proj_name):
 class Unet3D(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
+        hparams.ds_path = 'D:\\Datasets\\CQ500RandomTF'
         # Determine Dataset class and compute train/valid split to be used in [train/valid]_dataloader()
-        self.hparams = hparams
-                     # Use the dataset with random TFs
+        self.save_hyperparameters(hparams)
+        # Use the dataset with random TFs
         self.items = [n for n in os.listdir(self.hparams.ds_path) if n.endswith('_original.pt')]
         self.ds_cls = QureDataset
         random.shuffle(self.items)
@@ -499,7 +500,7 @@ class Unet3D(pl.LightningModule):
             tf = torch.stack([it[2] for it in batch])
         return x, y, tf
 
-    @pl.data_loader
+    # @pl.data_loader
     def train_dataloader(self):
         return DataLoader(
             dataset=self.ds_cls(self.hparams.ds_path,
@@ -515,7 +516,7 @@ class Unet3D(pl.LightningModule):
             num_workers=0
         )
 
-    @pl.data_loader
+    # @pl.data_loader
     def val_dataloader(self):
         return DataLoader(
             dataset=self.ds_cls(self.hparams.ds_path,

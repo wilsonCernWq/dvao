@@ -46,7 +46,8 @@ def color_generator():
 def normalize_hounsfield(vol, value):
     ''' Moves the negative number peak to `value` (if negatives exist), then normalizes by 4096 and clips [0,1] '''
     ret = vol.copy()
-    if vol.min() < 0: ret[vol == vol.min()] = value
+    if vol.min() < 0: 
+        ret[vol == vol.min()] = value
     return np.clip(ret / 4095.0, 0.0, 1.0)
 
 def apply_box_tf(x, value=0.4, lb=1560.0, ub=3060.0):
@@ -92,7 +93,7 @@ def apply_tf_torch(x, tf_pts):
 def get_histogram_peaks(data, bins=1000, skip_outlier=True):
     if skip_outlier:
         if data.min() < 0.0 or data.max() > 1.0:
-            data = normalize_hounsfield(data)
+            data = normalize_hounsfield(data, 0.0)
         vals, ranges = np.histogram(data[np.logical_and(data < 1.0, data > 1e-2)], bins)
     else:
         vals, ranges = np.histogram(data, bins)
@@ -133,29 +134,32 @@ def get_trapezoid_tf_points_from_peaks(peaks, height_range=(0.1, 0.9), width_ran
     '''
     num_peaks = np.random.randint(1, max_num_peaks)
     height_range_len = height_range[1] - height_range[0]
-    width_range_len  = width_range[1] - width_range[0]
+    width_range_len  = width_range[1]  - width_range[0]
     color_gen = color_generator()
     def make_trapezoid(c, top_height, bot_width):
         bot_height = np.random.rand(1).item() * top_height
         top_width  = np.random.rand(1).item() * bot_width
         return np.stack([
-          np.array([c - bot_width/2 -1e-2, 0]),    # left wall          ____________  __ top_height
-          np.array([c - bot_width/2, bot_height]), # bottom left       / top_width  \
-          np.array([c - top_width/2, top_height]), # top left        /__ bot_width __\__ bot_height
-          np.array([c + top_width/2, top_height]), # top right      |                |
-          np.array([c + bot_width/2, bot_height]), # bottom right   |   right wall ->|
-          np.array([c + bot_width/2 +1e-2, 0])     # right wall     |<- left wall    |
-        ])                                         #               |        c       |__ 0
+          np.array([c - bot_width/2 -1e-2, 0]),    # left wall         _____________ ____ top_height
+          np.array([c - bot_width/2, bot_height]), # bottom left      / top_width   \
+          np.array([c - top_width/2, top_height]), # top left        /__ bot_width __\ __ bot_height
+          np.array([c + top_width/2, top_height]), # top right      |                 |
+          np.array([c + bot_width/2, bot_height]), # bottom right   |   right wall -->|
+          np.array([c + bot_width/2 +1e-2, 0])     # right wall     |<- left wall     |
+        ])                                         #                |        c        |__ 0
 
     trapezes = [make_trapezoid(c, # Center of peak
-        top_height= height_range_len * np.random.rand(1).item() + height_range[0],
-        bot_width = width_range_len  * np.random.rand(1).item() + width_range[0]
+        top_height = height_range_len * np.random.rand(1).item() + height_range[0],
+        bot_width  = width_range_len  * np.random.rand(1).item() + width_range[0]
         ) for c, p in peaks]
     result = []
     for t in trapezes:
-        if overlaps_trapeze(t, result) or includes_maxvalue(t) or includes_minvalue(t): continue
-        else: result.append(colorize_trapeze(t, next(color_gen)))
-        if len(result) >= max_num_peaks: break
+        if overlaps_trapeze(t, result) or includes_maxvalue(t) or includes_minvalue(t): 
+            continue
+        else: 
+            result.append(colorize_trapeze(t, next(color_gen)))
+        if len(result) >= max_num_peaks: 
+            break
     res_arr = np.stack(result)
     np.random.shuffle(res_arr)
     res_arr = np.clip(res_arr[:num_peaks].reshape((-1, 5)), 0, 1)

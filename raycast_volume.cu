@@ -365,8 +365,19 @@ __global__ void replaceWithMedian(float* vol, glm::ivec3 volSize, float value, f
   out[i] = medianBubble(vec, count);
 }
 
-extern "C"
-void raycastVolume(float* vol_p, float* tf_p, int* texDims_p, float* voxelScale_p, float* ray_p, float stepsFactor, size_t nRays, float minValue, float* vol_out_p){
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void shoutout() {
+  printf("shoutout()\n");
+}
+
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void raycastVolume(float* vol_p, float* tf_p, int* texDims_p, float* voxelScale_p, float* ray_p, float stepsFactor, size_t nRays, float minValue, float* vol_out_p) {
     // printf("raycastVolume()\n");
     glm::ivec3 volSize      = glm::ivec3(texDims_p[0], texDims_p[1], texDims_p[2]);
     size_t     tfResolution = texDims_p[3];
